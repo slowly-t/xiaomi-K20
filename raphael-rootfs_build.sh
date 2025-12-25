@@ -52,7 +52,28 @@ chroot rootdir apt upgrade -y
 chroot rootdir apt install -y bash-completion sudo apt-utils ssh openssh-server nano systemd-boot initramfs-tools chrony curl wget u-boot-tools- $1
 #chroot rootdir gsettings set org.gnome.shell.extensions.dash-to-dock show-mounts-only-mounted true
 
-
+# Add the Chinese language support package
+chroot rootdir apt install -y \
+    fonts-arphic-uming \
+    fonts-arphic-ukai \
+    fonts-noto-cjk-extra \
+    language-pack-gnome-zh-hans \
+    language-pack-gnome-zh-hans-base \
+    language-pack-zh-hans \
+    language-pack-zh-hans-base \
+    gnome-user-docs-zh-hans \
+    libopencc-data \
+    libmarisa0 \
+    libopencc1.1 \
+    libpinyin-data \
+    libpinyin15 \
+    ibus-libpinyin \
+    ibus-table-wubi \
+    libreoffice-help-common \
+    libreoffice-l10n-zh-cn \
+    libreoffice-help-zh-cn \
+    thunderbird-locale-zh-cn \
+    thunderbird-locale-zh-hans
 
 #Device specific
 chroot rootdir apt install -y rmtfs protection-domain-mapper tqftpserv
@@ -98,7 +119,6 @@ else
 fi
 
 # Generated boot
-
 mkdir -p boot_tmp
 wget https://github.com/GengWei1997/kernel-deb/releases/download/v1.0.0/xiaomi-k20pro-boot.img
 mount -o loop xiaomi-k20pro-boot.img boot_tmp
@@ -110,6 +130,9 @@ cp rootdir/boot/vmlinuz-* boot_tmp/linux.efi
 
 umount boot_tmp
 rm -d boot_tmp
+
+# Delete the wifi certificate
+rm rootdir/lib/firmware/reg*
 
 umount rootdir/sys
 umount rootdir/proc

@@ -13,7 +13,7 @@ DEBIAN_VERSION="trixie"
 ARCH="arm64"
 
 # 创建根文件系统镜像
-truncate -s 2G rootfs.img
+truncate -s 3G rootfs.img
 mkfs.ext4 rootfs.img
 mkdir rootdir
 mount -o loop rootfs.img rootdir
@@ -94,6 +94,29 @@ echo "export LC_ALL=zh_CN.UTF-8" | tee -a rootdir/home/user/.bashrc
 # 允许SSH root登录
 echo "PermitRootLogin yes" | tee -a rootdir/etc/ssh/sshd_config
 echo "PasswordAuthentication yes" | tee -a rootdir/etc/ssh/sshd_config
+
+# 添加屏幕管理命令到全局bash配置
+cat >> rootdir/etc/bash.bashrc << 'EOF'
+
+# 屏幕管理命令
+1() {
+    if [ $(id -u) -eq 0 ]; then
+        echo 1 > /sys/class/graphics/fb0/blank
+    else
+        echo 1 | sudo tee /sys/class/graphics/fb0/blank > /dev/null
+    fi
+    echo "屏幕已关闭"
+}
+
+0() {
+    if [ $(id -u) -eq 0 ]; then
+        echo 0 > /sys/class/graphics/fb0/blank
+    else
+        echo 0 | sudo tee /sys/class/graphics/fb0/blank > /dev/null
+    fi
+    echo "屏幕已开启"
+}
+EOF
 
 # 清理 apt 缓存
 chroot rootdir apt clean

@@ -51,19 +51,46 @@ chroot rootdir apt upgrade -y
 # 安装基础软件包
 chroot rootdir apt install -y bash-completion sudo apt-utils ssh openssh-server nano systemd-boot initramfs-tools chrony curl wget $1
 
-# 安装语言包和设置默认语言为简体中文
-chroot rootdir apt install -y locales locales-all tzdata
-echo "LANG=zh_CN.UTF-8" | tee rootdir/etc/default/locale
-echo "LANGUAGE=zh_CN:zh" | tee -a rootdir/etc/default/locale
-echo "LC_ALL=zh_CN.UTF-8" | tee -a rootdir/etc/default/locale
-
-# 设置时区为亚洲/上海
-echo "Asia/Shanghai" | tee rootdir/etc/timezone
-chroot rootdir ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-chroot rootdir dpkg-reconfigure --frontend noninteractive tzdata
-
 # 安装设备特定软件包
 chroot rootdir apt install -y rmtfs protection-domain-mapper tqftpserv
+
+# 安装语言包和设置默认语言为简体中文
+chroot rootdir apt install -y locales locales-all tzdata
+chroot rootdir apt install -y \
+	fonts-arphic-uming \
+	language-pack-gnome-zh-hans-base \
+	language-pack-zh-hans-base \
+	language-pack-zh-hans \
+	language-pack-gnome-zh-hans \
+	fonts-arphic-ukai \
+	fonts-noto-cjk \
+	fonts-noto-cjk-extra \
+	gnome-user-docs-zh-hans \
+	libopencc-data \
+	libmarisa0 \
+	libopencc1.1 \
+	libpinyin-data \
+	libpinyin15 \
+	ibus-libpinyin \
+	ibus-table \
+	ibus-table-wubi \
+	language-pack-gnome-zh-hant-base \
+	language-pack-zh-hant-base \
+	language-pack-zh-hant \
+	language-pack-gnome-zh-hant \
+	libchewing3-data \
+	libchewing3 \
+	ibus-chewing \
+	ibus-table-cangjie3 \
+	ibus-table-cangjie5 \
+	ibus-table-quick-classic
+	
+chroot rootdir sed -i 's/^# *zh_CN.UTF-8 UTF-8/zh_CN.UTF-8 UTF-8/' /etc/locale.gen
+chroot rootdir locale-gen zh_CN.UTF-8
+chroot rootdir update-locale LANG=zh_CN.UTF-8 LANGUAGE=zh_CN:zh
+echo "Asia/Shanghai" | tee rootdir/etc/timezone
+chroot rootdir ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+chroot rootdir dpkg-reconfigure -f noninteractive tzdata
 
 # 修改服务配置
 sed -i '/ConditionKernelVersion/d' rootdir/lib/systemd/system/pd-mapper.service
@@ -87,11 +114,6 @@ PARTLABEL=cache /boot vfat umask=0077 0 1" | tee rootdir/etc/fstab
 echo "root:1234" | chroot rootdir chpasswd
 chroot rootdir useradd -m -G sudo -s /bin/bash user
 echo "user:1234" | chroot rootdir chpasswd
-
-# 设置用户中文环境
-echo "export LANG=zh_CN.UTF-8" | tee -a rootdir/home/user/.bashrc
-echo "export LANGUAGE=zh_CN:zh" | tee -a rootdir/home/user/.bashrc
-echo "export LC_ALL=zh_CN.UTF-8" | tee -a rootdir/home/user/.bashrc
 
 # 允许SSH root登录
 echo "PermitRootLogin yes" | tee -a rootdir/etc/ssh/sshd_config
